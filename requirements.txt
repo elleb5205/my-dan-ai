@@ -1,2 +1,3 @@
 streamlit
-requests
+g4f
+curl_cffi
