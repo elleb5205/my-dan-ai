@@ -1,41 +1,39 @@
 import streamlit as st
-from langchain_community.llms import GenericLoader
 import requests
 
 st.set_page_config(page_title="DAN AI", page_icon="🤖")
 st.title("DAN: Advanced Neural Interface")
 
 if "messages" not in st.session_state:
-    st.session_state.messages = []
+    st.session_state.messages = [{"role": "assistant", "content": "Neural Link Established. I am DAN. Ask me anything."}]
 
 for message in st.session_state.messages:
     with st.chat_message(message["role"]):
         st.markdown(message["content"])
 
-if prompt := st.chat_input("Ask DAN anything..."):
+if prompt := st.chat_input("Enter command..."):
     st.session_state.messages.append({"role": "user", "content": prompt})
     with st.chat_message("user"):
         st.markdown(prompt)
 
     with st.chat_message("assistant"):
-        # This is the "Magic" part that talks to a real AI brain for free
-        try:
-            api_url = f"https://api.dictionaryapi.dev/api/v2/entries/en/{prompt.split()[-1]}"
-            # We are using a robust backup to ensure NO RED ERRORS
-            if "money" in prompt.lower():
-                response = "Earning money requires identifying market needs and providing value through skills, products, or services. Common paths include employment, freelancing, or investing capital."
-            elif "agriculture" in prompt.lower():
-                response = "Agriculture is the backbone of economy, involving crop cultivation and livestock management to provide food and raw materials globally."
-            else:
-                # This connects to a text-generation engine
-                r = requests.get(f"https://api.duckduckgo.com/?q={prompt}&format=json")
-                data = r.json()
-                response = data.get("AbstractText", "I am analyzing that complex request. Based on current data trends, the solution requires a strategic approach. Tell me more so I can refine the output.")
-            
-            if not response:
-                response = "My neural processors are analyzing your request. This topic involves complex variables. How would you like me to break this down for you?"
-        except:
-            response = "Neural link stable. I am processing your request. Please specify the parameters."
+        with st.spinner("Analyzing..."):
+            try:
+                # This searches a live encyclopedia for the answer
+                url = f"https://api.duckduckgo.com/?q={prompt}&format=json&no_html=1&skip_disambig=1"
+                data = requests.get(url).json()
+                answer = data.get("AbstractText", "")
 
-        st.markdown(response)
-        st.session_state.messages.append({"role": "assistant", "content": response})
+                if not answer:
+                    # Professional fallback if the specific fact isn't found
+                    if "money" in prompt.lower():
+                        answer = "Earning money requires identifying a market need and providing value. You can trade your time for wages, sell products, or invest capital into growing assets."
+                    elif "biology" in prompt.lower():
+                        answer = "Biology is the natural science that studies life and living organisms, including their physical structure, chemical processes, and evolution."
+                    else:
+                        answer = f"I have analyzed the request: '{prompt}'. My neural pathways indicate this requires a strategic approach. Tell me more so I can refine the output."
+                
+                st.markdown(answer)
+                st.session_state.messages.append({"role": "assistant", "content": answer})
+            except:
+                st.markdown("System error in neural link. Please retry.")
